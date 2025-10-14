@@ -13,9 +13,9 @@ def get_current_user(
         db: Session = Depends(get_db)
     ):
     user = verify_token(token)
-    print(user)
+    print(type(user))
     if user is None:
-        raise HTTPException(status_code=401, detail="Token Invalido")
+        raise HTTPException(status_code=403, detail="Token Invalido")
     user_db = get_user_by_id(db, user)
     if user_db is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")

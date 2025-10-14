@@ -22,12 +22,11 @@ async def login_for_access_token(
             detail="Datos Incorrectos en email o password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        
     data={"sub": str(user.id_usuario), "rol":user.id_rol}
-    
-    access_token = create_access_token(data)
+    access_token = create_access_token(data)   
 
     return ResponseLoggin(
         user=user,
         access_token=access_token
     )
+

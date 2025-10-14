@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
     class Config:
-        env_file = ".env"
+        envfile = ".env"
 
 settings = Settings()
+

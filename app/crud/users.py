@@ -68,22 +68,7 @@ def get_all_user_except_admins(db: Session):
         logger.error(f"Error al obtener usuarios: {e}")
         raise Exception("Error de base de datos al obtener los usuarios")
 
-# def update_user_by_id(db: Session, user_id: int, user_update: UserUpdate) -> bool:
-#     try:
-#         fields = user_update.model_dump(exclude_unset=True)
-#         if not fields:
-#             return False
-#         set_clause = ", ".join([f"{key} = :{key}" for key in fields])
-#         fields["user_id"] = user_id
 
-#         query = text(f"UPDATE usuarios SET {set_clause} WHERE id_usuario = :user_id")
-#         db.execute(query, fields)
-#         db.commit()
-#         return True
-#     except Exception as e:
-#         db.rollback()
-#         logger.error(f"Error al actualizar usuario: {e}")
-#         raise Exception("Error de base de datos al actualizar el usuario")
 
 def update_user_by_id(db: Session, user_id: int, user: UserUpdate) -> Optional[bool]:
     try:
@@ -123,6 +108,7 @@ def get_user_by_id(db:Session, id:int):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener usuario por email: {e}")
         raise Exception("Error de base de datos al obtener el usuario")
+    
     
 def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool:
     try:

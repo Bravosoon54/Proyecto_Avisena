@@ -232,7 +232,7 @@ CREATE TABLE `roles` (
 	PRIMARY KEY(`id_rol`)
 );
 
-INSERT INTO roles (nombre, descripcion) VALUES 
+INSERT INTO roles (nombre_rol, descripcion) VALUES 
 ('superadmin', 'todos los poderes'),
 ('administrador', 'todo menos crear superadmin'),
 ('supervisor', 'asignar tareas'),
@@ -250,6 +250,16 @@ CREATE TABLE `usuarios` (
     `estado` BOOLEAN,
 	PRIMARY KEY(`id_usuario`),
     FOREIGN KEY(id_rol) REFERENCES roles(id_rol)
+);
+
+CREATE TABLE `fincas` (
+	`id_finca` INT NOT NULL AUTO_INCREMENT UNIQUE,
+	`nombre` VARCHAR(30) NOT NULL,
+	`longitud` FLOAT NOT NULL,
+	`latitud` FLOAT NOT NULL,
+	`id_usuario` INT NOT NULL,
+	`estado` BOOLEAN NOT NULL,
+	PRIMARY KEY(`id_finca`)
 );
 
 
@@ -282,7 +292,7 @@ class UserEstado(BaseModel):
 class UserOut(UserBase):
     id_usuario: int
 
-## 6. CRUD usuarios
+## 4. CRUD usuarios
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -345,7 +355,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> bool:
 
 
 
-## 7. Endpoints usuarios
+## 6. Endpoints usuarios
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -600,7 +610,7 @@ def verify_token(token: str):
 
 ## 10. Proteger los endpoints 
 
-# modificar router/user
+# modificar api/user
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -654,4 +664,33 @@ def get_users_by_centro(db: Session, cod_centro: int):
             FROM usuario
             WHERE cod_centro = :cod_centro
         """)
-        result = db.execute(query, {"cod_centro": cod_centro}).mappin
+        result = db.execute(query, {"cod_centro": cod_centro}).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener usuarios por cod_centro: {e}")
+        raise Exception("Error de base de datos al obtener los usuarios")
+
+
+
+
+## Ejercicio
+
+## Crear la siguiente tabla en Base de datos y realizar las siguientes 
+## funcionalidades en fastapi todas aseguradas con token.
+
+# crear ambiente_formacion (solo superadmin y admin)
+# modificar ambiente_formacion (solo superadmin y admin)
+# obtener por id ambiente_formacion
+# obtener los ambientes activos por centro de formación
+# modificar el estado de un ambiente de formación (solo superadmin y admin)
+
+CREATE TABLE ambiente_formacion(
+    id_ambiente INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre_ambiente VARCHAR(40),
+    num_max_aprendices TINYINT UNSIGNED,
+    municipio VARCHAR(40),
+    ubicacion VARCHAR(80),
+    cod_centro INT UNSIGNED,
+    estado BOOLEAN, -- True Activo   False Inactivo
+    FOREIGN KEY(cod_centro) REFERENCES centro_formacion(cod_centro)
+);

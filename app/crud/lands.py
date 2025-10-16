@@ -12,11 +12,9 @@ def create_land(db: Session, land: LandCreate) -> Optional[bool]:
     try:
         sentencia = text("""
             INSERT INTO fincas(
-                nombre, longitud, latitud,
-                id_usuario, estado
+                nombre, longitud, latitud, estado
             ) VALUES (
-                :nombre, :longitud, :latitud,
-                :id_usuario, :estado
+                :nombre, :longitud, :latitud, :estado
             )
         """)
         db.execute(sentencia, land.model_dump())
@@ -29,7 +27,7 @@ def create_land(db: Session, land: LandCreate) -> Optional[bool]:
 
 def get_land_by_name(db: Session, name: str):
     try:
-        query = text("""SELECT id_finca, nombre, longitud, latitud, id_usuario, estado
+        query = text("""SELECT id_finca, nombre, longitud, latitud, estado
                      FROM fincas
                      WHERE fincas.nombre = :nombre_finca
                 """)

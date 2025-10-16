@@ -5,7 +5,6 @@ class UserBase(BaseModel):
     nombre: str = Field(min_length=3, max_length=70)
     id_rol: int
     email: EmailStr
-    # tipo_contrato: str = Field(min_length=6, max_length=50)
     telefono: str = Field(min_length=7, max_length=15)
     documento: str = Field(min_length=8, max_length=20)
     estado: bool

@@ -1,11 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.crud.permisos import verify_permissions
 from app.router.dependencies import get_current_user
 from core.database import get_db
-from app.schemas.sensors import SensorCreate, SensorOut, SensorUpdate
+from app.schemas.sensors import SensorCreate, SensorOut, SensorUpdate, SensorPage
 from app.schemas.users import UserOut
 from app.crud import sensors as crud_sensors
 
@@ -95,6 +95,33 @@ def update_sensor(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/sensor/all-pag", response_model=SensorPage)
+def get_sensores_pag(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado para consultar sensores")
+
+        skip = (page - 1) * page_size
+        data = crud_sensors.get_all_sensores_pag(db, skip=skip, limit=page_size)
+        
+        total = data["total"]
+        sensors = data["sensors"]
+        
+        return SensorPage(
+            page=page,
+            page_size=page_size,
+            total_sensors=total,
+            total_pages=(total + page_size - 1) // page_size,
+            sensors=sensors
+        )
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/sensor/cambiar-estado/{id_sensor}", status_code=status.HTTP_200_OK)
 def change_sensor_status(

@@ -103,6 +103,43 @@ def update_sensor_by_id(db: Session, id_sensor: int, sensor: SensorUpdate) -> Op
         logger.error(f"Error al actualizar sensor {id_sensor}: {e}")
         raise Exception("Error de base de datos al actualizar el sensor")
 
+def get_all_sensores_pag(db: Session, skip: int = 0, limit: int = 10):
+    """
+    Obtiene los sensores con paginación.
+    Compatible con PostgreSQL, MySQL y SQLite.
+    """
+    try:
+        # 1. Contar total de sensores
+        count_query = text("""
+            SELECT COUNT(id_sensor) AS total
+            FROM sensores
+        """)
+        total_result = db.execute(count_query).scalar()
+        
+        # 2. Consultar sensores paginados
+        data_query = text("""
+            SELECT 
+                s.id_sensor, s.nombre, s.id_tipo_sensor, s.id_galpon, 
+                s.descripcion, s.estado,
+                t.nombre AS nombre_tipo, t.modelo AS modelo_tipo, 
+                g.nombre AS nombre_galpon
+            FROM sensores s
+            INNER JOIN tipo_sensores t ON s.id_tipo_sensor = t.id_tipo
+            INNER JOIN galpones g ON s.id_galpon = g.id_galpon
+            ORDER BY s.nombre
+            LIMIT :limit OFFSET :skip
+        """)
+        
+        result = db.execute(data_query, {"skip": skip, "limit": limit}).mappings().all()
+        
+        # 3. Retornar resultados
+        return {
+            "total": total_result or 0,
+            "sensors": [dict(row) for row in result]
+        }
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener los sensores paginados: {e}", exc_info=True)
+        raise Exception("Error de base de datos al obtener los sensores")
 
 def change_sensor_status(db: Session, id_sensor: int, nuevo_estado: bool) -> bool:
     try:

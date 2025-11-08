@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-
 class SensorBase(BaseModel):
     nombre: str = Field(min_length=3, max_length=255)
     id_tipo_sensor: int
@@ -26,3 +25,10 @@ class SensorOut(SensorBase):
     nombre_tipo: str
     modelo_tipo: str
     nombre_galpon: str
+    
+class SensorPage(BaseModel):
+    page: int
+    page_size: int
+    total_sensors: int
+    total_pages: int
+    sensors: list[SensorOut]

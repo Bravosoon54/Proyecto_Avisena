@@ -1,11 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.crud.permisos import verify_permissions
 from app.router.dependencies import get_current_user
 from core.database import get_db
-from app.schemas.sensor_types import SensorTypeCreate, SensorTypeOut, SensorTypeUpdate
+from app.schemas.sensor_types import SensorTypeCreate, SensorTypeOut, SensorTypeUpdate, SensorTypePage
 from app.schemas.users import UserOut
 from app.crud import sensor_types as crud_sensor_types
 
@@ -79,6 +79,33 @@ def update_sensor_type(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/tipo-sensor/all-pag", response_model=SensorTypePage)
+def get_sensor_types_pag(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado para consultar tipos de sensores")
+
+        skip = (page - 1) * page_size
+        data = crud_sensor_types.get_all_sensor_types_pag(db, skip=skip, limit=page_size)
+        
+        total = data["total"]
+        sensor_types = data["sensor_types"]
+        
+        return SensorTypePage(
+            page=page,
+            page_size=page_size,
+            total_sensor_types=total,
+            total_pages=(total + page_size - 1) // page_size,
+            sensor_types=sensor_types
+        )
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/tipo-sensor/cambiar-estado/{id_tipo}", status_code=status.HTTP_200_OK)
 def change_sensor_type_status(

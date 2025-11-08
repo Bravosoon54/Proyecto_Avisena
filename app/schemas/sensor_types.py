@@ -21,3 +21,9 @@ class SensorTypeEstado(BaseModel):
 class SensorTypeOut(SensorTypeBase):
     id_tipo: int
 
+class SensorTypePage(BaseModel):
+    page: int
+    page_size: int
+    total_sensor_types: int
+    total_pages: int
+    sensor_types: list[SensorTypeOut]

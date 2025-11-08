@@ -76,6 +76,37 @@ def update_sensor_type_by_id(db: Session, id_tipo: int, tipo: SensorTypeUpdate) 
         logger.error(f"Error al actualizar tipo de sensor {id_tipo}: {e}")
         raise Exception("Error de base de datos al actualizar el tipo de sensor")
 
+def get_all_sensor_types_pag(db: Session, skip: int = 0, limit: int = 10):
+    """
+    Obtiene los tipos de sensores con paginación.
+    Compatible con PostgreSQL, MySQL y SQLite.
+    """
+    try:
+        # 1. Contar total de tipos de sensores
+        count_query = text("""
+            SELECT COUNT(id_tipo) AS total
+            FROM tipo_sensores
+        """)
+        total_result = db.execute(count_query).scalar()
+        
+        # 2. Consultar tipos de sensores paginados
+        data_query = text("""
+            SELECT id_tipo, nombre, descripcion, modelo, estado
+            FROM tipo_sensores
+            ORDER BY nombre
+            LIMIT :limit OFFSET :skip
+        """)
+        
+        result = db.execute(data_query, {"skip": skip, "limit": limit}).mappings().all()
+        
+        # 3. Retornar resultados
+        return {
+            "total": total_result or 0,
+            "sensor_types": [dict(row) for row in result]
+        }
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener los tipos de sensores paginados: {e}", exc_info=True)
+        raise Exception("Error de base de datos al obtener los tipos de sensores")
 
 def change_sensor_type_status(db: Session, id_tipo: int, nuevo_estado: bool) -> bool:
     try:
